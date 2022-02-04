@@ -22,6 +22,7 @@ class CSV2ExcelProcessor:
     def load_csv(csv_path: str, columns_to_int: List[int]) -> pd.DataFrame:
         csv_data = pd.read_csv(csv_path, header=None)
         csv_data = csv_data.loc[1:, :]
+        csv_data.fillna('', inplace=True)
         for idx in columns_to_int:
             csv_data[idx] = pd.to_numeric(csv_data[idx]).astype(np.int)
         return csv_data
