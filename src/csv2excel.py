@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 import shutil
 from copy import copy
 
@@ -47,19 +47,27 @@ class CSV2ExcelProcessor:
                 cell.protection = copy(styles[j]['protection'])
 
     @staticmethod
-    def prepare_template_copy(csv_file: str, template_path: str, output_dir: str) -> str:
+    def prepare_template_copy(csv_file: str,
+                              template_path: str,
+                              output_dir: str,
+                              skip_existing: bool = False) -> Tuple[bool, str]:
         csv_stem = Path(csv_file).stem
         output_filename = csv_stem + '_' + Path(template_path).name
         output_file_path = Path(output_dir) / output_filename
-        shutil.copy(template_path, output_file_path)
-        return str(output_file_path)
+        if skip_existing and output_file_path.exists():
+            skip = True
+        else:
+            shutil.copy(template_path, output_file_path)
+            skip = False
+        return skip, str(output_file_path)
 
     @staticmethod
     def csv2template(csv_dir: str,
                      template_path: str,
                      output_dir: str,
                      unprotected_col_ids: List[int],
-                     sheet_name: str):
+                     sheet_name: str,
+                     skip_existing: bool = False):
 
         template_type = template_path.split('.')[-1]
         if template_type != 'xlsx':
@@ -72,12 +80,23 @@ class CSV2ExcelProcessor:
             return
 
         for csv_file in tqdm(csv_files):
-            output_file_path = CSV2ExcelProcessor.prepare_template_copy(csv_file, template_path, output_dir)
-            csv_df = CSV2ExcelProcessor.load_csv(csv_file)
-            excel_writer = pd.ExcelWriter(output_file_path,
-                                          mode='a',
-                                          if_sheet_exists='overlay'
-                                          )
-            csv_df.to_excel(excel_writer, sheet_name=sheet_name, index=False, startcol=4, startrow=2, header=None)
-            CSV2ExcelProcessor.restore_formatting(excel_writer, sheet_name, unprotected_col_ids)
-            excel_writer.save()
+            try:
+                skip, output_file_path = CSV2ExcelProcessor.prepare_template_copy(csv_file,
+                                                                                  template_path,
+                                                                                  output_dir,
+                                                                                  skip_existing)
+                if skip:
+                    print(f'{output_file_path} already exists. Skipping...')
+                    continue
+
+                csv_df = CSV2ExcelProcessor.load_csv(csv_file)
+                excel_writer = pd.ExcelWriter(output_file_path,
+                                              mode='a',
+                                              if_sheet_exists='overlay'
+                                              )
+                csv_df.to_excel(excel_writer, sheet_name=sheet_name, index=False, startcol=4, startrow=2, header=None)
+                CSV2ExcelProcessor.restore_formatting(excel_writer, sheet_name, unprotected_col_ids)
+                excel_writer.save()
+            except Exception as e:
+                print(f"Couldn't process file: {csv_file}")
+                print(f'Exception details: {e}')

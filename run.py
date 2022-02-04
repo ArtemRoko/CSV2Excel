@@ -8,10 +8,11 @@ if __name__ == '__main__':
     sheet_name = 'Template'  # Were to copy data from csv
     unprotected_columns_ids = [22, 23, 24, 26, 27, 28, 31]  # Columns that should be editable
     output_dir = './output_excel'
+    skip_existing = True  # skip processing if an output file already exists
 
     CSV2ExcelProcessor.csv2template(csv_dir=csv_dir,
                                     template_path=template_file,
                                     output_dir=output_dir,
                                     unprotected_col_ids=unprotected_columns_ids,
-                                    sheet_name=sheet_name)
-    
+                                    sheet_name=sheet_name,
+                                    skip_existing=skip_existing)
