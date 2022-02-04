@@ -79,7 +79,10 @@ class CSV2ExcelProcessor:
             print(f'No csv files in {csv_dir}. Please check your input dir.')
             return
 
+        failed_files = []
+
         for csv_file in tqdm(csv_files):
+            output_file_path = None
             try:
                 skip, output_file_path = CSV2ExcelProcessor.prepare_template_copy(csv_file,
                                                                                   template_path,
@@ -90,13 +93,21 @@ class CSV2ExcelProcessor:
                     continue
 
                 csv_df = CSV2ExcelProcessor.load_csv(csv_file)
-                excel_writer = pd.ExcelWriter(output_file_path,
-                                              mode='a',
-                                              if_sheet_exists='overlay'
-                                              )
-                csv_df.to_excel(excel_writer, sheet_name=sheet_name, index=False, startcol=4, startrow=2, header=None)
-                CSV2ExcelProcessor.restore_formatting(excel_writer, sheet_name, unprotected_col_ids)
-                excel_writer.save()
+                with pd.ExcelWriter(output_file_path, mode='a', if_sheet_exists='overlay') as excel_writer:
+                    csv_df.to_excel(excel_writer,
+                                    sheet_name=sheet_name,
+                                    index=False,
+                                    startcol=4,
+                                    startrow=2,
+                                    header=None)
+                    CSV2ExcelProcessor.restore_formatting(excel_writer, sheet_name, unprotected_col_ids)
+
             except Exception as e:
                 print(f"Couldn't process file: {csv_file}")
-                print(f'Exception details: {e}')
+                print(f'Exception details: {str(e)}')
+                if output_file_path is not None:
+                    Path(output_file_path).unlink(missing_ok=True)
+                    failed_files.append(csv_file)
+
+        print('Processing done. Failed to process these files:')
+        [print(file) for file in failed_files]
