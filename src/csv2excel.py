@@ -38,12 +38,14 @@ class CSV2ExcelProcessor:
         for i, row in enumerate(sheet.rows):
             if i < 2:
                 continue
-            elif i == 3:
-                for col_id in unprotected_col_ids:
-                    styles[col_id]['protection'] = Protection(locked=False)
             for j, cell in enumerate(row):
                 if i == 2:
-                    style = {'color': cell.fill, 'protection': cell.protection}
+                    if j in unprotected_col_ids:
+                        protection = Protection(locked=False)
+                        cell.protection = protection
+                    else:
+                        protection = cell.protection
+                    style = {'color': cell.fill, 'protection': protection}
                     styles.append(style)
                     continue
                 cell.fill = copy(styles[j]['color'])
