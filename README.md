@@ -1,5 +1,5 @@
 ### Instruction
-1. Create/choose our python environment.
+1. Create/choose your python environment.
 2. Install python requirements:  
 ```shell
 pip install -r requirements.txt
