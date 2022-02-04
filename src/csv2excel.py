@@ -5,6 +5,7 @@ import shutil
 from copy import copy
 
 import pandas as pd
+import numpy as np
 from openpyxl.styles.protection import Protection
 from tqdm import tqdm
 
@@ -18,9 +19,11 @@ class CSV2ExcelProcessor:
         return files
 
     @staticmethod
-    def load_csv(csv_path: str) -> pd.DataFrame:
+    def load_csv(csv_path: str, columns_to_int: List[int]) -> pd.DataFrame:
         csv_data = pd.read_csv(csv_path, header=None)
         csv_data = csv_data.loc[1:, :]
+        for idx in columns_to_int:
+            csv_data[idx] = pd.to_numeric(csv_data[idx]).astype(np.int)
         return csv_data
 
     @staticmethod
@@ -66,6 +69,7 @@ class CSV2ExcelProcessor:
                      template_path: str,
                      output_dir: str,
                      unprotected_col_ids: List[int],
+                     columns_to_int: List[int],
                      sheet_name: str,
                      skip_existing: bool = False):
 
@@ -92,7 +96,7 @@ class CSV2ExcelProcessor:
                     print(f'{output_file_path} already exists. Skipping...')
                     continue
 
-                csv_df = CSV2ExcelProcessor.load_csv(csv_file)
+                csv_df = CSV2ExcelProcessor.load_csv(csv_file, columns_to_int)
                 with pd.ExcelWriter(output_file_path, mode='a', if_sheet_exists='overlay') as excel_writer:
                     csv_df.to_excel(excel_writer,
                                     sheet_name=sheet_name,
