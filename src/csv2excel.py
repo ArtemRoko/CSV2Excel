@@ -1,0 +1,83 @@
+import os
+from pathlib import Path
+from typing import List
+import shutil
+from copy import copy
+
+import pandas as pd
+from openpyxl.styles.protection import Protection
+from tqdm import tqdm
+
+
+class CSV2ExcelProcessor:
+
+    @staticmethod
+    def get_files(dir_path: str, files_type: str = 'csv') -> List[Path]:
+        files = os.listdir(dir_path)
+        files = [Path(dir_path) / file for file in files if file.split('.')[-1] == files_type]
+        return files
+
+    @staticmethod
+    def load_csv(csv_path: str) -> pd.DataFrame:
+        csv_data = pd.read_csv(csv_path, header=None)
+        csv_data = csv_data.loc[1:, :]
+        return csv_data
+
+    @staticmethod
+    def restore_formatting(excel_writer: pd.ExcelWriter,
+                           sheet_name: str,
+                           unprotected_col_ids: List[int]
+                           ):
+
+        sheet = excel_writer.book[sheet_name]
+        styles = []
+
+        for i, row in enumerate(sheet.rows):
+            if i < 2:
+                continue
+            elif i == 3:
+                for col_id in unprotected_col_ids:
+                    styles[col_id]['protection'] = Protection(locked=False)
+            for j, cell in enumerate(row):
+                if i == 2:
+                    style = {'color': cell.fill, 'protection': cell.protection}
+                    styles.append(style)
+                    continue
+                cell.fill = copy(styles[j]['color'])
+                cell.protection = copy(styles[j]['protection'])
+
+    @staticmethod
+    def prepare_template_copy(csv_file: str, template_path: str, output_dir: str) -> str:
+        csv_stem = Path(csv_file).stem
+        output_filename = csv_stem + '_' + Path(template_path).name
+        output_file_path = Path(output_dir) / output_filename
+        shutil.copy(template_path, output_file_path)
+        return str(output_file_path)
+
+    @staticmethod
+    def csv2template(csv_dir: str,
+                     template_path: str,
+                     output_dir: str,
+                     unprotected_col_ids: List[int],
+                     sheet_name: str):
+
+        template_type = template_path.split('.')[-1]
+        if template_type != 'xlsx':
+            print(f'Template type must \"xlsl\", use Save As in Excel to convert it.')
+            return
+
+        csv_files = CSV2ExcelProcessor.get_files(csv_dir)
+        if len(csv_files) == 0:
+            print(f'No csv files in {csv_dir}. Please check your input dir.')
+            return
+
+        for csv_file in tqdm(csv_files):
+            output_file_path = CSV2ExcelProcessor.prepare_template_copy(csv_file, template_path, output_dir)
+            csv_df = CSV2ExcelProcessor.load_csv(csv_file)
+            excel_writer = pd.ExcelWriter(output_file_path,
+                                          mode='a',
+                                          if_sheet_exists='overlay'
+                                          )
+            csv_df.to_excel(excel_writer, sheet_name=sheet_name, index=False, startcol=4, startrow=2, header=None)
+            CSV2ExcelProcessor.restore_formatting(excel_writer, sheet_name, unprotected_col_ids)
+            excel_writer.save()
