@@ -5,7 +5,6 @@ import shutil
 from copy import copy
 
 import pandas as pd
-import numpy as np
 from openpyxl.styles.protection import Protection
 from tqdm import tqdm
 
@@ -24,7 +23,7 @@ class CSV2ExcelProcessor:
         csv_data = csv_data.loc[1:, :]
         csv_data.fillna('', inplace=True)
         for idx in columns_to_int:
-            csv_data[idx] = pd.to_numeric(csv_data[idx]).astype(np.int)
+            csv_data[idx] = csv_data[idx].apply(lambda x: x.split('.')[0])
         return csv_data
 
     @staticmethod
@@ -78,7 +77,7 @@ class CSV2ExcelProcessor:
 
         template_type = template_path.split('.')[-1]
         if template_type != 'xlsx':
-            print(f'Template type must \"xlsl\", use Save As in Excel to convert it.')
+            print(f'Template type must be in \"xlsl\" format, use Save As in Excel to convert it.')
             return
 
         csv_files = CSV2ExcelProcessor.get_files(csv_dir)
