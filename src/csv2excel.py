@@ -18,10 +18,17 @@ class CSV2ExcelProcessor:
         return files
 
     @staticmethod
+    def replace_escapes(text: str) -> str:
+        escapes = ''.join([chr(char) for char in range(1, 32)])
+        translator = str.maketrans('', '', escapes)
+        return text.translate(translator)
+
+    @staticmethod
     def load_csv(csv_path: str, columns_to_int: List[int]) -> pd.DataFrame:
         csv_data = pd.read_csv(csv_path, header=None)
         csv_data = csv_data.loc[1:, :]
         csv_data.fillna('', inplace=True)
+        csv_data = csv_data.applymap(CSV2ExcelProcessor.replace_escapes)
         for idx in columns_to_int:
             csv_data[idx] = csv_data[idx].apply(lambda x: x.split('.')[0])
         return csv_data
@@ -115,5 +122,6 @@ class CSV2ExcelProcessor:
                     Path(output_file_path).unlink(missing_ok=True)
                     failed_files.append(csv_file)
 
-        print('Processing done. Failed to process these files:')
-        [print(file) for file in failed_files]
+        if len(failed_files) > 0:
+            print('Processing done. Failed to process these files:')
+            [print(file) for file in failed_files]
