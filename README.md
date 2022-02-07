@@ -13,8 +13,3 @@ pip install -r requirements.txt
 python run.py
 ```
 The processing of one files might take about 30-40 seconds.
-
-## Known issues
-Some files can't be processed due to their special aspects.
-For 212 csv files provided, 6 was not processed and should be populated manually.
-The issue will be fixed as soon as possible.
