@@ -12,7 +12,6 @@ if __name__ == '__main__':
     output_dir = './output_excel'  # output file name = [csv_name]_[template_name].xlsx
     skip_existing = True  # skip processing if an output file already exists
 
-    t1 = time.monotonic()
     CSV2ExcelProcessor.csv2template(csv_dir=csv_dir,
                                     template_path=template_file,
                                     output_dir=output_dir,
@@ -20,6 +19,5 @@ if __name__ == '__main__':
                                     columns_to_int=columns_to_int,
                                     sheet_name=sheet_name,
                                     skip_existing=skip_existing)
-    t2 = time.monotonic()
-    print(f'One file per {(t2-t1)/25:.2f} s')
+
 
