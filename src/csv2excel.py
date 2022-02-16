@@ -36,6 +36,12 @@ class CSV2ExcelProcessor:
         return text.translate(translator)
 
     @staticmethod
+    def _filter_ma_indicators(df: pd.DataFrame) -> pd.DataFrame:
+        filter_values = [509, 510, 511, 512]
+        df = df[~df[6].isin(filter_values)]
+        return df
+
+    @staticmethod
     def _load_csv(csv_path: str, columns_to_int: List[int]) -> pd.DataFrame:
         csv_data = pd.read_csv(csv_path, header=None)
         csv_data = csv_data.loc[1:, :]
@@ -43,6 +49,7 @@ class CSV2ExcelProcessor:
         csv_data = csv_data.applymap(CSV2ExcelProcessor._replace_escapes)
         for idx in columns_to_int:
             csv_data[idx] = pd.to_numeric(csv_data[idx].apply(lambda x: x.split('.')[0]))
+        csv_data = CSV2ExcelProcessor._filter_ma_indicators(csv_data)
         return csv_data
 
     @staticmethod
