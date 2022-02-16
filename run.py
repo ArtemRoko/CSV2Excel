@@ -10,7 +10,7 @@ if __name__ == '__main__':
     unprotected_columns_ids = [22, 23, 24, 26, 27, 28, 29, 42]  # Columns that should be editable
     columns_to_int = [2, 6, 17, 18, 19]  # IDs of columns in csv file that will be cast to int
     output_dir = './output_excel'  # output file name = [csv_name]_[template_name].xlsx
-    skip_existing = True  # skip processing if an output file already addexists
+    skip_existing = True  # skip processing if an output file already exists
 
     CSV2ExcelProcessor.csv2template(csv_dir=csv_dir,
                                     template_path=template_file,

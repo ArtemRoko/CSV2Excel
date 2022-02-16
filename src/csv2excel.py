@@ -8,6 +8,7 @@ from functools import partial
 
 import pandas as pd
 from openpyxl.styles.protection import Protection
+from openpyxl.worksheet.datavalidation import DataValidation
 from tqdm import tqdm
 
 
@@ -78,6 +79,10 @@ class CSV2ExcelProcessor:
                     continue
                 cell.fill = copy(styles[j]['color'])
                 cell.protection = copy(styles[j]['protection'])
+
+        data_val = DataValidation(type="list", formula1='=dropdowns!$M$2')
+        sheet.add_data_validation(data_val)
+        data_val.add('AQ3:AQ501')
 
     @staticmethod
     def _prepare_template_copy(csv_file: str,
