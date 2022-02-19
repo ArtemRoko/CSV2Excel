@@ -7,6 +7,7 @@ from multiprocessing import Pool
 from functools import partial
 
 import pandas as pd
+from openpyxl import Workbook
 from openpyxl.styles.protection import Protection
 from openpyxl.worksheet.datavalidation import DataValidation
 from tqdm import tqdm
@@ -80,9 +81,25 @@ class CSV2ExcelProcessor:
                 cell.fill = copy(styles[j]['color'])
                 cell.protection = copy(styles[j]['protection'])
 
-        data_val = DataValidation(type="list", formula1='=dropdowns!$M$2')
-        sheet.add_data_validation(data_val)
-        data_val.add('AQ3:AQ501')
+        # data_val = DataValidation(type="list", formula1='=dropdowns!$M$2')
+        # sheet.add_data_validation(data_val)
+        # data_val.add('AQ3:AQ501')
+        CSV2ExcelProcessor._restore_all_dropdowns(excel_writer.book)
+
+    @staticmethod
+    def _restore_dropdowns(wb: Workbook, sheet_name: str, apply_range: str, formula: str) -> None:
+        data_val = DataValidation(type="list", formula1=formula)
+        wb[sheet_name].add_data_validation(data_val)
+        data_val.add(apply_range)
+
+    @staticmethod
+    def _restore_all_dropdowns(wb: Workbook):
+        CSV2ExcelProcessor._restore_dropdowns(wb, 'Template', 'AQ3:AQ501', '=dropdowns!$M$2')
+        CSV2ExcelProcessor._restore_dropdowns(wb, 'Add New Records', 'E2:E45', '=dropdowns!$H$2:$H$3')
+        CSV2ExcelProcessor._restore_dropdowns(wb, 'Add New Records', 'F2:F45', '=dropdowns!$I$2:$I$6')
+        CSV2ExcelProcessor._restore_dropdowns(wb, 'Add New Records', 'G2:G45', '=dropdowns!$A$2:$A$24')
+        CSV2ExcelProcessor._restore_dropdowns(wb, 'Add New Records', 'H2:H45', '=dropdowns!$F$2:$F$1002')
+        CSV2ExcelProcessor._restore_dropdowns(wb, 'Add New Records', 'L2:L45', '=dropdowns!$K$2:$K$3')
 
     @staticmethod
     def _prepare_template_copy(csv_file: str,

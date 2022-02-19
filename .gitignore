@@ -78,7 +78,8 @@ venv.bak/
 .projectile
 
 # Current project
-input_csv/*
-output_excel/*
-template/*
+input_csv
+input_excel
+output_excel
+template
 _run.py
