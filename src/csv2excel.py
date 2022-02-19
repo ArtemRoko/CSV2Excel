@@ -16,9 +16,10 @@ from tqdm import tqdm
 class CSV2ExcelProcessor:
 
     @staticmethod
-    def _get_files(dir_path: str, files_type: str = 'csv') -> List[Path]:
+    def _get_files(dir_path: str, files_type: List[str] = 'csv') -> List[Path]:
+        files_type = [files_type] if files_type is str else files_type
         files = os.listdir(dir_path)
-        files = [Path(dir_path) / file for file in files if file.split('.')[-1] == files_type]
+        files = [Path(dir_path) / file for file in files if file.split('.')[-1] in files_type]
         return files
 
     @staticmethod
@@ -40,8 +41,7 @@ class CSV2ExcelProcessor:
     @staticmethod
     def _filter_ma_indicators(df: pd.DataFrame) -> pd.DataFrame:
         filter_values = [509, 510, 511, 512]
-        df = df[~df[6].isin(filter_values)]
-        return df
+        return df[~df[6].isin(filter_values)]
 
     @staticmethod
     def _load_csv(csv_path: str, columns_to_int: List[int]) -> pd.DataFrame:
@@ -53,6 +53,11 @@ class CSV2ExcelProcessor:
             csv_data[idx] = pd.to_numeric(csv_data[idx].apply(lambda x: x.split('.')[0]))
         csv_data = CSV2ExcelProcessor._filter_ma_indicators(csv_data)
         return csv_data
+
+    # @staticmethod
+    # def _load_excel(excel_path: str, sheet_list: List[str], engine: str = 'pyxlsb') -> Dict[str, pd.DataFrame]:
+    #     xlsb_data = pd.read_excel(excel_path, sheet_name=sheet_list, engine=engine)
+    #     return xlsb_data
 
     @staticmethod
     def _restore_formatting(excel_writer: pd.ExcelWriter,
@@ -81,9 +86,6 @@ class CSV2ExcelProcessor:
                 cell.fill = copy(styles[j]['color'])
                 cell.protection = copy(styles[j]['protection'])
 
-        # data_val = DataValidation(type="list", formula1='=dropdowns!$M$2')
-        # sheet.add_data_validation(data_val)
-        # data_val.add('AQ3:AQ501')
         CSV2ExcelProcessor._restore_all_dropdowns(excel_writer.book)
 
     @staticmethod
@@ -117,6 +119,30 @@ class CSV2ExcelProcessor:
         return skip, str(output_file_path)
 
     @staticmethod
+    def sheets2csv(excel_dir: str,
+                   sheet_name: str,
+                   header_row_n: int,
+                   col_range: str,
+                   output_csv_path: str) -> None:
+
+        excel_files = CSV2ExcelProcessor._get_files(excel_dir, ['xlsx', 'xlsb'])
+        if len(excel_files) == 0:
+            print(f'{excel_dir} has no excel files')
+            return
+
+        merged_df = pd.read_excel(excel_files[0], sheet_name=sheet_name, usecols=col_range, dtype=str)
+        merged_df['file_name'] = Path(excel_files[0]).name
+        col_names = list(merged_df.columns)
+        if len(excel_files) > 1:
+            for file in tqdm(excel_files[1:]):
+                df = pd.read_excel(file, sheet_name=sheet_name,
+                                   usecols=col_range,
+                                   dtype=str)
+                df['file_name'] = Path(file).name
+                merged_df = pd.concat([merged_df, df])
+        merged_df[col_names].to_csv(output_csv_path)
+
+    @staticmethod
     def csv2template(csv_dir: str,
                      template_path: str,
                      output_dir: str,
@@ -139,7 +165,7 @@ class CSV2ExcelProcessor:
         files_tuple = []
         for csv_file in csv_files:
 
-            skip, output_file_path = CSV2ExcelProcessor._prepare_template_copy(csv_file,
+            skip, output_file_path = CSV2ExcelProcessor._prepare_template_copy(str(csv_file),
                                                                                template_path,
                                                                                output_dir,
                                                                                skip_existing)
