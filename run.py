@@ -17,13 +17,13 @@ if __name__ == '__main__':
     add_new_record_header = 1
     add_new_record_colrange = 'A:M'
 
-    # CSV2ExcelProcessor.csv2template(input_dir=excel_dir,
-    #                                 template_path=template_file,
-    #                                 output_dir=output_dir,
-    #                                 unprotected_col_ids=unprotected_columns_ids,
-    #                                 columns_to_int=columns_to_int,
-    #                                 sheet_name=sheet_name,
-    #                                 skip_existing=skip_existing)
+    CSV2ExcelProcessor.csv2template(input_dir=excel_dir,
+                                    template_path=template_file,
+                                    output_dir=output_dir,
+                                    unprotected_col_ids=unprotected_columns_ids,
+                                    columns_to_int=columns_to_int,
+                                    sheet_name=sheet_name,
+                                    skip_existing=skip_existing)
 
     CSV2ExcelProcessor.sheets2csv(excel_dir,
                                   'Add New Records',
